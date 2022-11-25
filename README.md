@@ -6,7 +6,7 @@ A quick python script for auto-posting an RSS feed to Mastodon. Created by AI6YR
 
 In order to have this script work, you need the following:
 1. A dedicated Mastodon user account created on a server.
-2. A "access key" for your app created for that user account. (under yourserver/settings/applications)
+2. An "access key" for your app created for that user account. (under yourserver/settings/applications)
 
 ## Script setup
 
