@@ -1,6 +1,5 @@
-
 """
-NWS RSS -> Fediverse gateway
+RSS -> Fediverse gateway
 
 AI6YR - Nov 2022
 """
@@ -25,6 +24,8 @@ config.read('config.ini')
 
 feedurl = config['feed']['feed_url']
 feedname = config['feed']['feed_name']
+feedvisibility = config['feed']['feed_visibility']
+feedtags = config['feed']['feed_tags']
 print (feedurl)
 print (feedname)
 # connect to mastodon
@@ -56,6 +57,7 @@ while(1):
            else:
               isposted = False
               print (clean)
+              tootText = clean + feedtags + " ***EXPERIMENTAL BOT***DO NOT USE FOR OFFICIAL ADVICE***"
               soup = BeautifulSoup(entry['summary'], 'html.parser')
               for img in soup.findAll('img'):
                 print("***IMAGE:",img.get('src'))
@@ -67,9 +69,8 @@ while(1):
                     print('Image sucessfully Downloaded')
                     print (temp.name)
                     mediaid = mastodonBot.media_post(temp.name, mime_type="image/jpeg")
-                    tootText = clean + " ***EXPERIMENTAL BOT***DO NOT USE FOR OFFICIAL ADVICE***"
                     try:
-                       postedToot = mastodonBot.status_post(clean,None,mediaid,False,'public')
+                       postedToot = mastodonBot.status_post(clean,None,mediaid,False, feedvisibility)
                        lastpost = clean
                        isposted = True
                     except Exception as e:
@@ -79,12 +80,12 @@ while(1):
                 temp.close()
               if (isposted == False):
                    try:
-                       postedToot = mastodonBot.status_post(clean,None,None,False,'public')
+                       postedToot = mastodonBot.status_post(tootText,None,None,False,feedvisibility)
                        lastpost = clean
                    except Exception as e:
                        print(e)
                     
               lastspottime = spottime
     now = datetime.now().timestamp()
-    print ("time:",now)
+#    print ("time:",now)
     time.sleep(60)
