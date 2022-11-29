@@ -12,4 +12,8 @@ In order to have this script work, you need the following:
 
 All configuration for the script will ultimately reside in config.ini
 
+feed_url = URL of the RSS feed you want to query
+feed_name = What you want to name this feed
+feed_visibility = public, unlisted, etc. (per Mastodon.py)
+feed_tags = #your #additional #tags here will be appended to the toot
 
