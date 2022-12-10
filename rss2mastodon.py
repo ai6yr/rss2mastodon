@@ -17,6 +17,7 @@ import re
 import tempfile
 import shutil
 from PIL import Image
+import html
 
 # Load the config
 config = configparser.ConfigParser()
@@ -26,6 +27,7 @@ feedurl = config['feed']['feed_url']
 feedname = config['feed']['feed_name']
 feedvisibility = config['feed']['feed_visibility']
 feedtags = config['feed']['feed_tags']
+feeddelay = int(config['feed']['feed_delay'])
 max_image_size  = int(config['mastodon']['max_image_size'])
 print (feedurl)
 print (feedname)
@@ -45,7 +47,7 @@ while(1):
     for entry in entries:
          #print (entry['summary'])
          clean = re.sub("<.*?>", "", entry['summary'])
-         clean = clean.replace("&amp;" ,"&")
+         clean = html.unescape(clean)
          spottime = dateutil.parser.parse(entry['published']).timestamp()
          firsttwo = clean[:2]
          firstthree = clean[:3]
@@ -99,6 +101,5 @@ while(1):
                        print(e)
                     
               lastspottime = spottime
-    now = datetime.now().timestamp()
-#    print ("time:",now)
-    time.sleep(60)
+
+    time.sleep(feeddelay)
