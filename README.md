@@ -1,6 +1,6 @@
 # rss2mastodon
 
-A quick python script for auto-posting an RSS feed to Mastodon. Created by AI6YR (Ben)
+A quick set of python scripts for auto-posting an RSS or Atom feed to Mastodon. Created by AI6YR (Ben)
 
 ## Mastodon setup
 
@@ -12,8 +12,15 @@ In order to have this script work, you need the following:
 
 All configuration for the script will ultimately reside in config.ini
 
+###Mastodon configuration
+* access_token = Mastodon access token
+* app_url = Mastodon server
+* max_image_size = max image size accepted by server
+
+###Feed configuration
 * feed_url = URL of the RSS feed you want to query
 * feed_name = What you want to name this feed
 * feed_visibility = public, unlisted, etc. (per Mastodon.py)
 * feed_tags = #your #additional #tags here will be appended to the toot
+* feed_delay = delay in seconds between checking on the RSS/Atom feed
 
