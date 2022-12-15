@@ -24,3 +24,19 @@ All configuration for the script will ultimately reside in config.ini
 * feed_tags = #your #additional #tags here will be appended to the toot
 * feed_delay = delay in seconds between checking on the RSS/Atom feed
 
+## Running the script
+
+python3 rss2mastodon.py
+
+or
+
+python3 atom2mastodon.py
+
+## Unattended/background operation
+
+If you want to run this unattended:
+
+screen
+nohup python3 -u rss2mastodon.py &
+
+
