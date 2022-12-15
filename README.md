@@ -12,12 +12,12 @@ In order to have this script work, you need the following:
 
 All configuration for the script will ultimately reside in config.ini
 
-###Mastodon configuration
+### Mastodon configuration
 * access_token = Mastodon access token
 * app_url = Mastodon server
 * max_image_size = max image size accepted by server
 
-###Feed configuration
+### Feed configuration
 * feed_url = URL of the RSS feed you want to query
 * feed_name = What you want to name this feed
 * feed_visibility = public, unlisted, etc. (per Mastodon.py)
