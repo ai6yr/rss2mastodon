@@ -37,6 +37,7 @@ python3 atom2mastodon.py
 If you want to run this unattended:
 
 screen
+
 nohup python3 -u rss2mastodon.py &
 
 
