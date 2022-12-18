@@ -17,6 +17,7 @@ import re
 import tempfile
 import shutil
 from PIL import Image
+import html
 
 # Load the config
 config = configparser.ConfigParser()
@@ -52,17 +53,21 @@ while(1):
     for entry in entries:
   #       print ("----------------")
 #        print (entry)
+         link = entry['link']
          clean = re.sub("<.*?>", "", entry['summary'])
-         # next section is all completely messy and needs to be replaced, hack to linkify urls
+         clean = html.unescape(clean)
          clean = clean.replace("&amp;","&")
          clean = clean.replace("nitter.net","https://nitter.net")
          clean = clean.replace("go.usa.gov","https://go.usa.gov")
          clean = clean.replace("wpc.ncep.noaa.gov","https://wpc.ncep.noaa.gov")
          clean = clean.replace(" weather.gov"," https://weather.gov")
          clean = clean.replace("nwschat.weather.gov"," https://nwschat.weather.gov")
-         # end messy hacking
-         tootText = clean + feedtags 
-         tootText = tootText[:499]
+         clean = clean.replace(" bit.ly"," https://bit.ly")
+         clean = clean.replace(" owl.ly"," https://owl.ly")
+         clean = clean.replace(" t.co"," https://t.co")
+         tootText = clean + feedtags
+         tootText = clean[:474] + " " + link
+
          spottime = dateutil.parser.parse(entry['published']).timestamp()
          title = entry['title']
          firsttwo = title[:2]
