@@ -35,6 +35,10 @@ try:
    feeddelay  = int(config['feed']['feed_delay'])
 except:
    feeddelay = 180
+try:
+   linkfeed  = config['feed']['feed_link'].lower()
+except:
+   linkfeed = "false"
 print (feedurl)
 print (feedname)
 # connect to mastodon
@@ -53,7 +57,9 @@ while(1):
     for entry in entries:
   #       print ("----------------")
 #        print (entry)
-         link = entry['link']
+         link = ""
+         if (linkfeed == "true"):
+             link = entry['link']
          clean = re.sub("<.*?>", "", entry['summary'])
          clean = html.unescape(clean)
          clean = clean.replace("&amp;","&")
@@ -65,9 +71,8 @@ while(1):
          clean = clean.replace(" bit.ly"," https://bit.ly")
          clean = clean.replace(" owl.ly"," https://owl.ly")
          clean = clean.replace(" t.co"," https://t.co")
-         tootText = clean + feedtags
+         tootText = clean + feedtags 
          tootText = clean[:474] + " " + link
-
          spottime = dateutil.parser.parse(entry['published']).timestamp()
          title = entry['title']
          firsttwo = title[:2]

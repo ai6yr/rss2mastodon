@@ -29,10 +29,6 @@ feedname = config['feed']['feed_name']
 feedvisibility = config['feed']['feed_visibility']
 feedtags = config['feed']['feed_tags']
 try:
-   feedlink = config['feed']['feed_link'].lower()
-except:
-   feedlink = "false"
-try:
    max_image_size  = int(config['mastodon']['max_image_size'])
 except:
    max_image_size = 1600
@@ -40,8 +36,13 @@ try:
    feeddelay  = int(config['feed']['feed_delay'])
 except:
    feeddelay = 180
+try:
+   linkfeed  = config['feed']['feed_link'].lower()
+except:
+   linkfeed = "false"
 print (feedurl)
 print (feedname)
+print (linkfeed)
 # connect to mastodon
 mastodonBot = Mastodon(
     access_token=config['mastodon']['access_token'],
@@ -58,21 +59,22 @@ if (1):
          print ("----------------")
 #        print (entry)
          link = ""
-         if (feedlink == "true"):
-            link = entry['link']
+         if (linkfeed == "true"):
+             link = entry['link']
+         print (link)
          clean = re.sub("<.*?>", "", entry['summary'])
          clean = html.unescape(clean)
          clean = clean.replace("&amp;","&")
-         clean = clean.replace(" nitter.net","https://nitter.net")
-         clean = clean.replace(" go.usa.gov","https://go.usa.gov")
-         clean = clean.replace(" wpc.ncep.noaa.gov","https://wpc.ncep.noaa.gov")
+         clean = clean.replace("nitter.net","https://nitter.net")
+         clean = clean.replace("go.usa.gov","https://go.usa.gov")
+         clean = clean.replace("wpc.ncep.noaa.gov","https://wpc.ncep.noaa.gov")
          clean = clean.replace(" weather.gov"," https://weather.gov")
-         clean = clean.replace(" nwschat.weather.gov"," https://nwschat.weather.gov")
+         clean = clean.replace("nwschat.weather.gov"," https://nwschat.weather.gov")
          clean = clean.replace(" bit.ly"," https://bit.ly")
          clean = clean.replace(" owl.ly"," https://owl.ly")
          clean = clean.replace(" t.co"," https://t.co")
          tootText = clean + feedtags
-         tootText = clean[:474] + " " + link
+         tootText = clean[:474] + " " +  link
 
          spottime = dateutil.parser.parse(entry['published']).timestamp()
          title = entry['title']
@@ -81,8 +83,10 @@ if (1):
         # if (spottime > lastspottime):
          if (1):
            print (tootText)
-           value = input ("Toot this? Y/N?")
-           if (value.lower() == "y"):
+           value = input ("Toot this? Y/N/Q?")
+           if (value.lower() == "q"):
+              exit
+           elif (value.lower() == "y"):
               print ("Tooting")
               isposted = False
               print (clean)
@@ -99,6 +103,7 @@ if (1):
                     print (temp.name)
                     mediaid = mastodonBot.media_post(temp.name, mime_type="video/mp4")
                     medialist.append(mediaid)
+                    time.sleep(5)
                 else:
                        print('Video Couldn\'t be retrieved')
                 temp.close()
