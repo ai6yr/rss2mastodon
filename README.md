@@ -8,6 +8,11 @@ In order to have this script work, you need the following:
 1. A dedicated Mastodon user account created on a server.
 2. An "access key" for your app created for that user account. (under yourserver/settings/applications)
 
+## Python setup
+Make sure to install the following Python packages
+
+`pip3 install bs4 pillow mastodon.py feedparser`
+
 ## Script setup
 
 All configuration for the script will ultimately reside in config.ini
