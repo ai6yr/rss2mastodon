@@ -28,6 +28,7 @@ All configuration for the script will ultimately reside in config.ini
 * feed_visibility = public, unlisted, etc. (per Mastodon.py)
 * feed_tags = #your #additional #tags here will be appended to the toot
 * feed_delay = delay in seconds between checking on the RSS/Atom feed
+* feed_link = whether or not to include the "link" in RSS/Atom in the post
 
 ## Running the script
 
