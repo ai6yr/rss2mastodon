@@ -1,8 +1,9 @@
 """
 RSS -> Fediverse gateway
-Single Shot
 
-AI6YR - Nov 2022
+rss2single.py allows for selectively pushing RSS entries into Mastodon, one at a time.
+
+AI6YR Benjamin Kuo - Dec 2023
 """
 # imports (obviously)
 import configparser
@@ -18,7 +19,6 @@ import re
 import tempfile
 import shutil
 from PIL import Image
-import html
 
 # Load the config
 config = configparser.ConfigParser()
@@ -28,85 +28,50 @@ feedurl = config['feed']['feed_url']
 feedname = config['feed']['feed_name']
 feedvisibility = config['feed']['feed_visibility']
 feedtags = config['feed']['feed_tags']
-try:
-   max_image_size  = int(config['mastodon']['max_image_size'])
-except:
-   max_image_size = 1600
-try:
-   feeddelay  = int(config['feed']['feed_delay'])
-except:
-   feeddelay = 180
-try:
-   linkfeed  = config['feed']['feed_link'].lower()
-except:
-   linkfeed = "false"
+max_image_size  = int(config['mastodon']['max_image_size'])
 print (feedurl)
 print (feedname)
-print (linkfeed)
 # connect to mastodon
 mastodonBot = Mastodon(
     access_token=config['mastodon']['access_token'],
     api_base_url=config['mastodon']['app_url']
 )
 
+
 print ("Starting RSS watcher:" + feedname)
 lastpost = ""
 lastspottime = datetime.now().timestamp()
-if (1):
+if(1):
     data = (feedparser.parse(feedurl))
     entries = data["entries"]
+#    print (entries)
     for entry in entries:
-         print ("----------------")
-#        print (entry)
-         link = ""
-         if (linkfeed == "true"):
-             link = entry['link']
-         print (link)
+         print (entry['summary'])
+         try:
+           link = entry['link']
+         except:
+           link = ""
          clean = re.sub("<.*?>", "", entry['summary'])
-         clean = html.unescape(clean)
-         clean = clean.replace("&amp;","&")
-         clean = clean.replace("nitter.net","https://nitter.net")
-         clean = clean.replace("go.usa.gov","https://go.usa.gov")
-         clean = clean.replace("wpc.ncep.noaa.gov","https://wpc.ncep.noaa.gov")
-         clean = clean.replace(" weather.gov"," https://weather.gov")
-         clean = clean.replace("nwschat.weather.gov"," https://nwschat.weather.gov")
-         clean = clean.replace(" bit.ly"," https://bit.ly")
-         clean = clean.replace(" owl.ly"," https://owl.ly")
-         clean = clean.replace(" t.co"," https://t.co")
-         tootText = clean + feedtags
-         tootText = clean[:474] + " " +  link
+         clean = clean.replace("&amp;" ,"&")
+         clean = clean[:465] + " " + link
+         
 
          spottime = dateutil.parser.parse(entry['published']).timestamp()
-         title = entry['title']
-         firsttwo = title[:2]
-         firstthree = title[:3]
-        # if (spottime > lastspottime):
-         if (1):
-           print (tootText)
-           value = input ("Toot this? Y/N/Q?")
-           if (value.lower() == "q"):
+         firsttwo = clean[:2]
+         firstthree = clean[:3]
+#         if (1):
+         print (clean)
+         value = input ("Toot this? Y/N/Q?")
+         if (value.lower() == "q"):
               quit()
-           elif (value.lower() == "y"):
+         elif (value.lower() == "y"):
               print ("Tooting")
               isposted = False
               print (clean)
+              tootText = clean + feedtags 
+              tootText = tootText[:499]
               soup = BeautifulSoup(entry['summary'], 'html.parser')
               medialist = []
-              for video in soup.findAll('source'):
-                print("***VIDEO:",video.get('src'))
-                imgfile = video.get('src')
-                temp = tempfile.NamedTemporaryFile()
-                res = requests.get(imgfile, stream = True)
-                if res.status_code == 200:
-                    shutil.copyfileobj(res.raw, temp)
-                    print('Image sucessfully Downloaded')
-                    print (temp.name)
-                    mediaid = mastodonBot.media_post(temp.name, mime_type="video/mp4")
-                    medialist.append(mediaid)
-                    time.sleep(5)
-                else:
-                       print('Video Couldn\'t be retrieved')
-                temp.close()
               for img in soup.findAll('img'):
                 print("***IMAGE:",img.get('src'))
                 imgfile = img.get('src')
@@ -116,7 +81,6 @@ if (1):
                     shutil.copyfileobj(res.raw, temp)
                     print('Image sucessfully Downloaded')
                     print (temp.name)
-                    #ensure image will fit on server
                     image = Image.open(temp.name)
                     if ((image.size[0]>max_image_size) or (image.size[1]>max_image_size)):
                         origx = image.size[0]
@@ -130,22 +94,19 @@ if (1):
                         image = image.resize((newx,newy))
                         print ("new image size",image.size)
                         image.save(temp, format="png")
-                    try:
-                       mediaid = mastodonBot.media_post(temp.name, mime_type="image/jpeg")
-                       medialist.append(mediaid)
-                    except Exception as e:
-                       print ("unable to upload image")
-                       print (e) 
+                    mediaid = mastodonBot.media_post(temp.name, mime_type="image/jpeg")
+                    medialist.append(mediaid)
                 else:
                        print('Image Couldn\'t be retrieved')
                 temp.close()
-              if (isposted == False):
-                   try:
+
+              try:
                        postedToot = mastodonBot.status_post(tootText,None,medialist,False,feedvisibility)
-                       lastpost = postedToot
-                   except Exception as e:
+                       lastpost = clean
+              except Exception as e:
                        print(e)
                     
               lastspottime = spottime
     now = datetime.now().timestamp()
-    time.sleep(feeddelay)
+#    print ("time:",now)
+    time.sleep(60)
