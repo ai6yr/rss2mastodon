@@ -18,6 +18,7 @@ import tempfile
 import shutil
 from PIL import Image
 import html
+import magic
 
 # Load the config
 config = configparser.ConfigParser()
@@ -39,6 +40,10 @@ try:
    linkfeed  = config['feed']['feed_link'].lower()
 except:
    linkfeed = "false"
+try:
+   usetitle  = config['feed']['use_title'].lower()
+except:
+   usetitle = "false"
 print (feedurl)
 print (feedname)
 # connect to mastodon
@@ -60,7 +65,10 @@ while(1):
          link = ""
          if (linkfeed == "true"):
              link = entry['link']
-         clean = re.sub("<.*?>", "", entry['summary'])
+         if (usetitle == "true"):
+            clean = re.sub("<.*?>", "", entry['title'])
+         else:
+            clean = re.sub("<.*?>", "", entry['summary'])
          clean = html.unescape(clean)
          clean = clean.replace("&amp;","&")
          clean = clean.replace("nitter.net","https://nitter.net")
@@ -71,6 +79,9 @@ while(1):
          clean = clean.replace(" bit.ly"," https://bit.ly")
          clean = clean.replace(" owl.ly"," https://owl.ly")
          clean = clean.replace(" t.co"," https://t.co")
+         clean = clean.replace(" piped.video"," https://piped.video")
+         clean = clean.replace(" youtube.com"," https://youtube.com")
+         clean = clean.replace(" youtu.be"," https://youtu.be")
          tootText = clean + feedtags 
          tootText = clean[:474] + " " + link
          spottime = dateutil.parser.parse(entry['published']).timestamp()
@@ -101,8 +112,12 @@ while(1):
                     shutil.copyfileobj(res.raw, temp)
                     print('Image sucessfully Downloaded')
                     print (temp.name)
+                    mime = magic.Magic(mime=True)
+                    mimetype = mime.from_file(temp.name)
+                    print (mimetype)
                     try:
-                      mediaid = mastodonBot.media_post(temp.name, mime_type="video/mp4")
+                      mediaid = mastodonBot.media_post(temp.name, mime_type=mimetype)
+                     # mediaid = mastodonBot.media_post(temp.name, mime_type="video/mp4")
                       medialist.append(mediaid)
                     except Exception as e:
                       print (e)
@@ -134,7 +149,11 @@ while(1):
                         print ("new image size",image.size)
                         image.save(temp, format="png")
                     try:
-                       mediaid = mastodonBot.media_post(temp.name, mime_type="image/png")
+                       mime = magic.Magic(mime=True)
+                       mimetype = mime.from_file(temp.name)
+                       print (mimetype)
+                       mediaid = mastodonBot.media_post(temp.name, mime_type=mimetype)
+                       #mediaid = mastodonBot.media_post(temp.name, mime_type="image/png")
                        medialist.append(mediaid)
                     except Exception as e:
                        print ("Unable to upload image.")
