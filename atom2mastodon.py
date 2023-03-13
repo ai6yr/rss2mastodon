@@ -17,6 +17,8 @@ import re
 import tempfile
 import shutil
 from PIL import Image
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 import html
 import magic
 
@@ -44,6 +46,7 @@ try:
    usetitle  = config['feed']['use_title'].lower()
 except:
    usetitle = "false"
+
 print (feedurl)
 print (feedname)
 # connect to mastodon
@@ -54,6 +57,7 @@ mastodonBot = Mastodon(
 
 print ("Starting RSS watcher:" + feedname)
 lastpost = ""
+maxspottime = 0
 lastspottime = datetime.now().timestamp()
 while(1):
    try:
@@ -64,30 +68,35 @@ while(1):
 #        print (entry)
          link = ""
          if (linkfeed == "true"):
-             link = entry['link']
+             try:
+                link = entry['link']
+             except:
+                pass
          if (usetitle == "true"):
             clean = re.sub("<.*?>", "", entry['title'])
          else:
             clean = re.sub("<.*?>", "", entry['summary'])
          clean = html.unescape(clean)
          clean = clean.replace("&amp;","&")
-         clean = clean.replace("nitter.net","https://nitter.net")
-         clean = clean.replace("go.usa.gov","https://go.usa.gov")
-         clean = clean.replace("wpc.ncep.noaa.gov","https://wpc.ncep.noaa.gov")
+         clean = clean.replace(" nitter.net","https://nitter.net")
+         clean = clean.replace(" nitter.poast.org","https://nitter.poast.org")
+         clean = clean.replace(" go.usa.gov","https://go.usa.gov")
+         clean = clean.replace(" wpc.ncep.noaa.gov","https://wpc.ncep.noaa.gov")
          clean = clean.replace(" weather.gov"," https://weather.gov")
-         clean = clean.replace("nwschat.weather.gov"," https://nwschat.weather.gov")
+         clean = clean.replace(" nwschat.weather.gov"," https://nwschat.weather.gov")
          clean = clean.replace(" bit.ly"," https://bit.ly")
          clean = clean.replace(" owl.ly"," https://owl.ly")
          clean = clean.replace(" t.co"," https://t.co")
-         clean = clean.replace(" piped.video"," https://piped.video")
-         clean = clean.replace(" youtube.com"," https://youtube.com")
-         clean = clean.replace(" youtu.be"," https://youtu.be")
          tootText = clean + feedtags 
          tootText = clean[:474] + " " + link
          spottime = dateutil.parser.parse(entry['published']).timestamp()
+         if (spottime > maxspottime):
+            maxspottime = spottime
          title = entry['title']
          firsttwo = title[:2]
          firstthree = title[:3]
+         #print("debug: spottime:",spottime)
+         #print("debug: lastspottime:",lastspottime)
          if (spottime > lastspottime):
         # if (1):
         #   print (tootText)
@@ -112,12 +121,8 @@ while(1):
                     shutil.copyfileobj(res.raw, temp)
                     print('Image sucessfully Downloaded')
                     print (temp.name)
-                    mime = magic.Magic(mime=True)
-                    mimetype = mime.from_file(temp.name)
-                    print (mimetype)
                     try:
-                      mediaid = mastodonBot.media_post(temp.name, mime_type=mimetype)
-                     # mediaid = mastodonBot.media_post(temp.name, mime_type="video/mp4")
+                      mediaid = mastodonBot.media_post(temp.name, mime_type="video/mp4")
                       medialist.append(mediaid)
                     except Exception as e:
                       print (e)
@@ -149,11 +154,7 @@ while(1):
                         print ("new image size",image.size)
                         image.save(temp, format="png")
                     try:
-                       mime = magic.Magic(mime=True)
-                       mimetype = mime.from_file(temp.name)
-                       print (mimetype)
-                       mediaid = mastodonBot.media_post(temp.name, mime_type=mimetype)
-                       #mediaid = mastodonBot.media_post(temp.name, mime_type="image/png")
+                       mediaid = mastodonBot.media_post(temp.name, mime_type="image/png")
                        medialist.append(mediaid)
                     except Exception as e:
                        print ("Unable to upload image.")
@@ -168,8 +169,8 @@ while(1):
                    except Exception as e:
                        print(e)
                     
-              lastspottime = spottime
-    now = datetime.now().timestamp()
-   except e as Exception:
+    lastspottime = maxspottime #set last update to the newest update we saw in the list
+    #print("debug: lastspottime now ",lastspottime)
+   except Exception as e:
       print (e) 
    time.sleep(feeddelay)
