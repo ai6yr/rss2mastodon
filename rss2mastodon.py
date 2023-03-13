@@ -17,7 +17,6 @@ import re
 import tempfile
 import shutil
 from PIL import Image
-import html
 
 # Load the config
 config = configparser.ConfigParser()
@@ -28,6 +27,8 @@ feedname = config['feed']['feed_name']
 feedvisibility = config['feed']['feed_visibility']
 feedtags = config['feed']['feed_tags']
 feeddelay = int(config['feed']['feed_delay'])
+if (feeddelay < 60):
+     feeddelay = 300
 max_image_size  = int(config['mastodon']['max_image_size'])
 print (feedurl)
 print (feedname)
@@ -41,16 +42,18 @@ print ("Starting RSS watcher:" + feedname)
 lastpost = ""
 lastspottime = datetime.now().timestamp()
 while(1):
-   try:
     data = (feedparser.parse(feedurl))
     entries = data["entries"]
 #    print (entries)
     for entry in entries:
          #print (entry['summary'])
-         link = entry['link']
+         try:
+           link = entry['link']
+         except:
+           link = ""
          clean = re.sub("<.*?>", "", entry['summary'])
-         clean = html.unescape(clean)
-         clean = clean[:475] + link
+         clean = clean.replace("&amp;" ,"&")
+         clean = clean.replace("&nbsp;" ," ")
          spottime = dateutil.parser.parse(entry['published']).timestamp()
          firsttwo = clean[:2]
          firstthree = clean[:3]
@@ -66,7 +69,8 @@ while(1):
               isposted = False
               print (clean)
               tootText = clean + feedtags 
-              tootText = tootText[:499]
+              tootText = tootText[:475]
+              tootText = tootText + " " + link
               soup = BeautifulSoup(entry['summary'], 'html.parser')
               medialist = []
               for img in soup.findAll('img'):
@@ -103,8 +107,6 @@ while(1):
               except Exception as e:
                        print(e)
                     
-              lastspottime = spottime
-   except:
-      print ("problem fetching feed")
-
-   time.sleep(feeddelay)
+    lastspottime = datetime.now().timestamp()
+#    print ("time:",now)
+    time.sleep(feeddelay)
